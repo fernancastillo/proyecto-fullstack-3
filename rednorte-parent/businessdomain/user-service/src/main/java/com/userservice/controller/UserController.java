@@ -23,7 +23,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+    public ResponseEntity<User> getUserById(@PathVariable("id") Long id) {
         User user = userService.getUserById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con el ID: " + id));
         return ResponseEntity.ok(user);
@@ -36,13 +36,13 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user) {
+    public ResponseEntity<User> updateUser(@PathVariable("id") Long id, @RequestBody User user) {
         // Ya no hay try-catch. Si falla, el GlobalExceptionHandler se encarga.
         return ResponseEntity.ok(userService.updateUser(id, user));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteUser(@PathVariable("id") Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
