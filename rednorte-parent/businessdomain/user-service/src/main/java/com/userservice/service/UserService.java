@@ -3,7 +3,6 @@ package com.userservice.service;
 import com.userservice.entity.User;
 import com.userservice.exception.ResourceNotFoundException;
 import com.userservice.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.lang.NonNull;
 
@@ -13,8 +12,11 @@ import java.util.Optional;
 @Service
 public class UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+
+    public UserService(UserRepository userRepository) {
+    this.userRepository = userRepository;
+}
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
@@ -40,6 +42,9 @@ public class UserService {
 
 
     public void deleteUser(Long id) {
-        userRepository.deleteById(id);
+    if (!userRepository.existsById(id)) {
+        throw new ResourceNotFoundException("Usuario no encontrado con el ID: " + id);
     }
+    userRepository.deleteById(id);
+}
 }
