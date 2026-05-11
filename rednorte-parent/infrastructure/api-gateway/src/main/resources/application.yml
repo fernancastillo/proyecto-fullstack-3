@@ -24,12 +24,12 @@ spring:
         - id: waiting-list-service
           uri: lb://WAITING-LIST-SERVICE
           predicates:
-            - Path=/waiting-list/**
+            - Path=/api/waiting-list/**
 
         - id: user-service
           uri: lb://USER-SERVICE
           predicates:
-            - Path=/auth/**
+            - Path=/api/users/**
 
 eureka:
   client:
