@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/waiting-list")
+@RequestMapping("/waiting-list")
 public class WaitingListController {
 
     private final WaitingListService service;
@@ -53,5 +53,15 @@ public class WaitingListController {
     public ResponseEntity<Void> delete(@PathVariable("id") Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/specialty/{specialty}")
+    public ResponseEntity<List<WaitingList>> getBySpecialty(@PathVariable("specialty") String specialty) {
+        return ResponseEntity.ok(service.getBySpecialty(specialty));
+    }
+
+    @GetMapping("/status/{status}")
+    public ResponseEntity<List<WaitingList>> getByStatus(@PathVariable("status") String status) {
+        return ResponseEntity.ok(service.getByStatus(status));
     }
 }

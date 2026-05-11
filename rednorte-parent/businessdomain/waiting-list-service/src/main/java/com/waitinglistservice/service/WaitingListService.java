@@ -48,4 +48,11 @@ public class WaitingListService {
         }
         repository.deleteById(id);
     }
+    public List<WaitingList> getBySpecialty(String specialty) {
+        return repository.findBySpecialty(specialty);
+    }
+
+    public List<WaitingList> getByStatus(String status) {
+        return repository.findByStatus(status);
+    }
 }

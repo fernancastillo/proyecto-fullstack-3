@@ -1,6 +1,7 @@
 package com.requestservice.controller;
 
 import com.requestservice.entity.Request;
+import com.requestservice.exception.ResourceNotFoundException;
 import com.requestservice.service.RequestService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +27,7 @@ public class RequestController {
     public ResponseEntity<Request> getRequestById(@PathVariable("id") Long id) {
         // Usamos orElseThrow para lanzar la excepción si no existe el ID
         Request request = requestService.getRequestById(id)
-                .orElseThrow(() -> new RuntimeException("Solicitud no encontrada con el ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Solicitud no encontrada con el ID: " + id));
         return ResponseEntity.ok(request);
     }
 
