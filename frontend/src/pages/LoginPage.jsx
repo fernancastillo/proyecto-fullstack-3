@@ -40,21 +40,24 @@ const LoginPage = () => {
 
     setLoading(true);
 
-    // ---------------------------------------------------------
-    // TODO: Reemplazar este bloque con la llamada real al backend
-    // Ejemplo:
-    //   const response = await axios.post('/bff/auth/login', formData);
-    //   login(response.data);
-    // ---------------------------------------------------------
     await new Promise((res) => setTimeout(res, 900));
+    const ROLE_BY_DOMAIN = 
+    {
+      'medico.com': { role: 'MEDICO', username: 'usuario_demo' },
+      'admin.com':  { role: 'ADMIN',  username: 'admin_demo'   },
+    };
+    const DEFAULT_MOCK = { role: 'USUARIO', username: 'paciente_demo' };
+
+    const domain = formData.email.split('@')[1]?.toLowerCase();
+    const mockProfile = ROLE_BY_DOMAIN[domain] ?? DEFAULT_MOCK;
+
     const mockUser = {
       id: 1,
-      username: 'usuario_demo',
+      username: mockProfile.username,
       email: formData.email,
-      role: 'MEDICO',
+      role: mockProfile.role,
     };
     login(mockUser);
-    // ---------------------------------------------------------
 
     setLoading(false);
     navigate('/dashboard');
@@ -64,7 +67,6 @@ const LoginPage = () => {
     <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
 
-        {/* Header */}
         <div className="mb-8 text-center">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600 mb-4">
             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -75,12 +77,10 @@ const LoginPage = () => {
           <p className="text-sm text-slate-500 mt-1">Inicia sesión para continuar</p>
         </div>
 
-        {/* Card */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
 
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
 
-            {/* Email */}
             <div>
               <label htmlFor="email" className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">
                 Correo electrónico
@@ -107,7 +107,6 @@ const LoginPage = () => {
               )}
             </div>
 
-            {/* Password */}
             <div>
               <label htmlFor="password" className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">
                 Contraseña
@@ -153,7 +152,6 @@ const LoginPage = () => {
               )}
             </div>
 
-            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
@@ -174,7 +172,6 @@ const LoginPage = () => {
           </form>
         </div>
 
-        {/* Footer link */}
         <p className="text-center text-sm text-slate-500 mt-6">
           ¿No tienes cuenta?{' '}
           <Link to="/register" className="text-blue-600 font-medium hover:underline">
