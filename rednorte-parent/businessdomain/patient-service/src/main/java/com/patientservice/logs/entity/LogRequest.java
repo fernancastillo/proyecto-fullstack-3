@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -19,14 +18,9 @@ public class LogRequest {
     private Long id;
 
     private String endpoint;
-
     private String metodoHttp;
-
     private Long tiempoRespuesta;
-
     private Integer status;
-
     private String microservicio;
-
     private LocalDateTime fecha;
 }

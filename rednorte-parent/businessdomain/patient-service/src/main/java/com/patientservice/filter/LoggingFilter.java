@@ -2,13 +2,10 @@ package com.patientservice.filter;
 
 import com.patientservice.logs.entity.LogRequest;
 import com.patientservice.logs.service.LogRequestService;
-
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import org.springframework.stereotype.Component;
-
 import java.io.IOException;
 import java.time.LocalDateTime;
 
@@ -32,19 +29,38 @@ public class LoggingFilter implements Filter {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse res = (HttpServletResponse) response;
 
-        chain.doFilter(request, response);
+        String uri = req.getRequestURI();
+        if (uri.contains("/actuator") || uri.contains("/swagger") ||
+            uri.contains("/v3/api-docs") || uri.contains("/h2-console")) {
+            chain.doFilter(request, response);
+            return;
+        }
 
-        long fin = System.currentTimeMillis();
+        try {
+            chain.doFilter(request, response);
+        } finally {
+            long fin = System.currentTimeMillis();
+            long tiempoRespuesta = fin - inicio;
 
-        LogRequest log = new LogRequest();
+            System.out.println("[" + LocalDateTime.now() + "] " +
+                               req.getMethod() + " " + uri +
+                               " -> " + res.getStatus() +
+                               " (" + tiempoRespuesta + "ms)");
 
-        log.setEndpoint(req.getRequestURI());
-        log.setMetodoHttp(req.getMethod());
-        log.setTiempoRespuesta(fin - inicio);
-        log.setStatus(res.getStatus());
-        log.setFecha(LocalDateTime.now());
-        log.setMicroservicio("patients-service");
+            LogRequest log = new LogRequest();
+            log.setEndpoint(uri);
+            log.setMetodoHttp(req.getMethod());
+            log.setTiempoRespuesta(tiempoRespuesta);
+            log.setStatus(res.getStatus());
+            log.setFecha(LocalDateTime.now());
+            log.setMicroservicio("patient-service");
 
-        logService.guardar(log);
+            try {
+                logService.guardar(log);
+            } catch (Exception e) {
+                System.err.println("ERROR guardando log en BD: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
     }
 }
