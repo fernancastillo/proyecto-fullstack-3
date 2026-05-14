@@ -25,23 +25,29 @@ public class RequestController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Request> getRequestById(@PathVariable("id") Long id) {
-        // Usamos orElseThrow para lanzar la excepción si no existe el ID
         Request request = requestService.getRequestById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Solicitud no encontrada con el ID: " + id));
         return ResponseEntity.ok(request);
     }
 
-    // Nota: Aquí devolvemos List porque un paciente puede tener varias solicitudes
-    @GetMapping("/rut/{rut}")
-    public ResponseEntity<List<Request>> getRequestsByRut(@PathVariable("rut") String rut) {
-        List<Request> requests = requestService.getRequestsByRut(rut);
-        return ResponseEntity.ok(requests);
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Request>> getRequestsByUserId(@PathVariable("userId") Long userId) {
+        return ResponseEntity.ok(requestService.getRequestsByUserId(userId));
+    }
+
+    @GetMapping("/medico/{medicoId}")
+    public ResponseEntity<List<Request>> getRequestsByMedicoId(@PathVariable("medicoId") Long medicoId) {
+        return ResponseEntity.ok(requestService.getRequestsByMedicoId(medicoId));
     }
 
     @GetMapping("/especialidad/{especialidad}")
     public ResponseEntity<List<Request>> getRequestsByEspecialidad(@PathVariable("especialidad") String especialidad) {
-        List<Request> requests = requestService.getRequestsByEspecialidad(especialidad);
-        return ResponseEntity.ok(requests);
+        return ResponseEntity.ok(requestService.getRequestsByEspecialidad(especialidad));
+    }
+
+    @GetMapping("/estado/{estado}")
+    public ResponseEntity<List<Request>> getRequestsByEstado(@PathVariable("estado") String estado) {
+        return ResponseEntity.ok(requestService.getRequestsByEstado(estado));
     }
 
     @PostMapping
