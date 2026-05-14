@@ -5,7 +5,7 @@ import Navbar from './components/Navbar';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
-import PatientsPage from './pages/PatientsPage';
+import ProfilePage from './pages/ProfilePage';
 import RequestsPage from './pages/RequestsPage';
 import WaitingListPage from './pages/WaitingListPage';
 import AdminPage from './pages/AdminPage';
@@ -25,8 +25,8 @@ function App() {
                   <Route path="/dashboard" element={
                     <ProtectedRoute><DashboardPage /></ProtectedRoute>
                   } />
-                  <Route path="/patients" element={
-                    <ProtectedRoute><PatientsPage /></ProtectedRoute>
+                  <Route path="/profile" element={
+                    <ProtectedRoute><ProfilePage /></ProtectedRoute>
                   } />
                   <Route path="/requests" element={
                     <ProtectedRoute><RequestsPage /></ProtectedRoute>

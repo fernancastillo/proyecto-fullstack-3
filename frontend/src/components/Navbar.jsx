@@ -15,13 +15,16 @@ const Navbar = () => {
       <span className="text-xl font-bold">RedNorte</span>
       <div className="flex gap-4 items-center">
         <Link to="/dashboard" className="hover:underline">Dashboard</Link>
-        <Link to="/patients" className="hover:underline">Pacientes</Link>
+        <Link to="/profile" className="hover:underline">Mi Perfil</Link>
         <Link to="/requests" className="hover:underline">Solicitudes</Link>
         <Link to="/waiting-list" className="hover:underline">Lista de Espera</Link>
         {user?.role === 'ADMIN' && (
           <Link to="/admin" className="hover:underline">Admin</Link>
         )}
-        <button onClick={handleLogout} className="bg-white text-blue-700 px-3 py-1 rounded hover:bg-gray-100">
+        <button
+          onClick={handleLogout}
+          className="bg-white text-blue-700 px-3 py-1 rounded hover:bg-gray-100"
+        >
           Cerrar sesión
         </button>
       </div>
