@@ -17,7 +17,6 @@
     <name>businessdomain</name>
 
     <modules>
-        <module>patient-service</module>
         <module>request-service</module>
         <module>waiting-list-service</module>
         <module>user-service</module>
