@@ -1,12 +1,15 @@
 package com.userservice.controller;
 
+import com.userservice.dto.AuthRequest;
 import com.userservice.entity.User;
 import com.userservice.exception.ResourceNotFoundException;
 import com.userservice.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
@@ -79,5 +82,20 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@PathVariable("id") Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Valida email + contraseña y devuelve el usuario si las credenciales son correctas.
+     * Retorna 401 si son incorrectas o el usuario no existe.
+     */
+    @PostMapping("/authenticate")
+    public ResponseEntity<User> authenticate(@RequestBody AuthRequest request) {
+        Optional<User> userOpt = userService.authenticate(request.getEmail(), request.getPassword());
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        User user = userOpt.get();
+        user.setPassword(null); // nunca exponer el hash
+        return ResponseEntity.ok(user);
     }
 }

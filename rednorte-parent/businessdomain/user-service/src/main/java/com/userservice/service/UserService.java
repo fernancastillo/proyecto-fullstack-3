@@ -4,7 +4,9 @@ import com.userservice.entity.User;
 import com.userservice.exception.ResourceNotFoundException;
 import com.userservice.repository.UserRepository;
 import org.springframework.lang.NonNull;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -12,9 +14,11 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public List<User> getAllUsers() {
@@ -48,7 +52,7 @@ public class UserService {
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new IllegalArgumentException("Ya existe un usuario con el email: " + user.getEmail());
         }
-        // Al registrarse, el rol por defecto es PACIENTE
+        // El rol por defecto es PACIENTE
         if (user.getRole() == null || user.getRole().isBlank()) {
             user.setRole("PACIENTE");
         }
@@ -56,6 +60,8 @@ public class UserService {
         if (!"MEDICO".equals(user.getRole())) {
             user.setEspecialidad(null);
         }
+        // Codificar contraseña con BCrypt
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 
@@ -68,7 +74,6 @@ public class UserService {
             user.setRegion(userDetails.getRegion());
             user.setComuna(userDetails.getComuna());
             user.setAddress(userDetails.getAddress());
-            // Solo admin puede cambiar rol y especialidad
             if (userDetails.getRole() != null && !userDetails.getRole().isBlank()) {
                 user.setRole(userDetails.getRole());
             }
@@ -83,9 +88,17 @@ public class UserService {
 
     public User updatePassword(Long id, String newPassword) {
         return userRepository.findById(id).map(user -> {
-            user.setPassword(newPassword);
+            user.setPassword(passwordEncoder.encode(newPassword));
             return userRepository.save(user);
         }).orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con el ID: " + id));
+    }
+
+    /**
+     * Valida credenciales. Retorna el usuario si son correctas, vacío si no.
+     */
+    public Optional<User> authenticate(String email, String rawPassword) {
+        return getUserByEmail(email)
+                .filter(user -> passwordEncoder.matches(rawPassword, user.getPassword()));
     }
 
     public void deleteUser(Long id) {

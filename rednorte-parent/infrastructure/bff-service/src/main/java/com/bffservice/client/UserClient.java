@@ -1,8 +1,11 @@
 package com.bffservice.client;
 
+import com.bffservice.dto.LoginRequestDTO;
+import com.bffservice.dto.RegisterRequestDTO;
 import com.bffservice.dto.UserDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @FeignClient(name = "USER-SERVICE")
@@ -26,8 +29,17 @@ public interface UserClient {
     @GetMapping("/api/users/medicos")
     List<UserDTO> getMedicos();
 
+    /** Usado por BffController para operaciones admin (sin contraseña) */
     @PostMapping("/api/users")
     UserDTO createUser(@RequestBody UserDTO user);
+
+    /** Usado por AuthController para registrar nuevos pacientes (con contraseña) */
+    @PostMapping("/api/users")
+    UserDTO registerUser(@RequestBody RegisterRequestDTO registerRequest);
+
+    /** Valida credenciales; lanza FeignException.Unauthorized si son incorrectas */
+    @PostMapping("/api/users/authenticate")
+    UserDTO authenticate(@RequestBody LoginRequestDTO loginRequest);
 
     @PutMapping("/api/users/{id}")
     UserDTO updateUser(@PathVariable("id") Long id, @RequestBody UserDTO user);
