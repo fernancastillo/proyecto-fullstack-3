@@ -1,23 +1,17 @@
 package com.requestservice.repository;
 
 import com.requestservice.entity.Request;
-
-import java.util.List;
-import java.util.Optional;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-
+import java.util.List;
 
 @Repository
+public interface RequestRepository extends JpaRepository<Request, Long> {
 
-public interface RequestRepository extends JpaRepository<Request, Long>{
-    List<Request> findByRut(String rut);
-
+    List<Request> findByUserId(Long userId);
+    List<Request> findByMedicoId(Long medicoId);
     List<Request> findByEspecialidad(String especialidad);
-
-    Optional<Request> findById(Long id);
-
-    boolean existsByRut(String rut);
+    List<Request> findByEstado(String estado);
+    List<Request> findByUserIdAndEstado(Long userId, String estado);
+    List<Request> findByMedicoIdAndEstado(Long medicoId, String estado);
 }
