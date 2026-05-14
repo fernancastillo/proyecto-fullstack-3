@@ -6,7 +6,6 @@ import com.userservice.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -31,16 +30,49 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
+    @GetMapping("/rut/{rut}")
+    public ResponseEntity<User> getUserByRut(@PathVariable("rut") String rut) {
+        User user = userService.getUserByRut(rut)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con el RUT: " + rut));
+        return ResponseEntity.ok(user);
+    }
+
+    @GetMapping("/email/{email}")
+    public ResponseEntity<User> getUserByEmail(@PathVariable("email") String email) {
+        User user = userService.getUserByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con el email: " + email));
+        return ResponseEntity.ok(user);
+    }
+
+    @GetMapping("/role/{role}")
+    public ResponseEntity<List<User>> getUsersByRole(@PathVariable("role") String role) {
+        return ResponseEntity.ok(userService.getUsersByRole(role));
+    }
+
+    @GetMapping("/medicos")
+    public ResponseEntity<List<User>> getMedicos() {
+        return ResponseEntity.ok(userService.getMedicos());
+    }
+
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User user) {
-        User createdUser = userService.createUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
+        User created = userService.createUser(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable("id") Long id, @RequestBody User user) {
-        // Ya no hay try-catch. Si falla, el GlobalExceptionHandler se encarga.
-        return ResponseEntity.ok(userService.updateUser(id, user));
+    public ResponseEntity<User> updateUser(
+            @PathVariable("id") Long id,
+            @RequestBody User userDetails) {
+        return ResponseEntity.ok(userService.updateUser(id, userDetails));
+    }
+
+    @PutMapping("/{id}/password")
+    public ResponseEntity<Void> updatePassword(
+            @PathVariable("id") Long id,
+            @RequestBody String newPassword) {
+        userService.updatePassword(id, newPassword);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")

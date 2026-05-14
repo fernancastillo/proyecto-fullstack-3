@@ -35,7 +35,21 @@ public class UserControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockUser = new User(1L, "mmedina", "pass123", "medina@rednorte.cl", "DOCTOR");
+        mockUser = new User(
+            1L,
+            "12345678",
+            "9",
+            "María",
+            "Medina",
+            "mmedina@rednorte.cl",
+            "pass123",
+            "+56987654321",
+            "Antofagasta",
+            "Antofagasta",
+            "Calle Principal 456",
+            "MEDICO",
+            "Cardiología"
+        );
     }
 
     @Test
@@ -44,8 +58,9 @@ public class UserControllerTest {
 
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].username").value("mmedina"))
-                .andExpect(jsonPath("$[0].role").value("DOCTOR"));
+                .andExpect(jsonPath("$[0].name").value("María"))
+                .andExpect(jsonPath("$[0].role").value("MEDICO"))
+                .andExpect(jsonPath("$[0].especialidad").value("Cardiología"));
     }
 
     @Test
@@ -54,7 +69,16 @@ public class UserControllerTest {
 
         mockMvc.perform(get("/api/users/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email").value("medina@rednorte.cl"));
+                .andExpect(jsonPath("$.email").value("mmedina@rednorte.cl"))
+                .andExpect(jsonPath("$.rut").value("12345678"));
+    }
+
+    @Test
+    void testGetUserById_NotFound() throws Exception {
+        when(userService.getUserById(99L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/users/99"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -65,6 +89,13 @@ public class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(mockUser)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.username").value("mmedina"));
+                .andExpect(jsonPath("$.name").value("María"))
+                .andExpect(jsonPath("$.role").value("MEDICO"));
+    }
+
+    @Test
+    void testDeleteUser() throws Exception {
+        mockMvc.perform(delete("/api/users/1"))
+                .andExpect(status().isNoContent());
     }
 }
