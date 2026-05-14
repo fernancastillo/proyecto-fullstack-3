@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../api/axios';
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [formData, setFormData]       = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
+  const [errors, setErrors]           = useState({});
+  const [serverError, setServerError] = useState('');
+  const [loading, setLoading]         = useState(false);
 
   const validate = () => {
     const newErrors = {};
@@ -27,7 +29,8 @@ const LoginPage = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
+    if (errors[name])   setErrors((prev) => ({ ...prev, [name]: '' }));
+    if (serverError)    setServerError('');
   };
 
   const handleSubmit = async (e) => {
@@ -39,28 +42,24 @@ const LoginPage = () => {
     }
 
     setLoading(true);
+    setServerError('');
 
-    await new Promise((res) => setTimeout(res, 900));
-    const ROLE_BY_DOMAIN = 
-    {
-      'medico.com': { role: 'MEDICO', username: 'usuario_demo' },
-      'admin.com':  { role: 'ADMIN',  username: 'admin_demo'   },
-    };
-    const DEFAULT_MOCK = { role: 'USUARIO', username: 'paciente_demo' };
+    try {
+      const { data } = await api.post('/auth/login', {
+        email:    formData.email,
+        password: formData.password,
+      });
 
-    const domain = formData.email.split('@')[1]?.toLowerCase();
-    const mockProfile = ROLE_BY_DOMAIN[domain] ?? DEFAULT_MOCK;
-
-    const mockUser = {
-      id: 1,
-      username: mockProfile.username,
-      email: formData.email,
-      role: mockProfile.role,
-    };
-    login(mockUser);
-
-    setLoading(false);
-    navigate('/dashboard');
+      // data = { token, id, email, role, name, lastname, especialidad }
+      const { token, ...userData } = data;
+      login(userData, token);
+      navigate('/dashboard');
+    } catch (err) {
+      const msg = err.response?.data?.message ?? 'Error al iniciar sesión. Intenta nuevamente.';
+      setServerError(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -78,6 +77,16 @@ const LoginPage = () => {
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
+
+          {/* Error del servidor */}
+          {serverError && (
+            <div className="mb-5 flex items-center gap-2 bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-lg">
+              <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {serverError}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
 
@@ -97,14 +106,7 @@ const LoginPage = () => {
                   focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100
                   ${errors.email ? 'border-red-400 bg-red-50 focus:border-red-400 focus:ring-red-100' : 'border-slate-200'}`}
               />
-              {errors.email && (
-                <p className="mt-1.5 text-xs text-red-500 flex items-center gap-1">
-                  <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                  {errors.email}
-                </p>
-              )}
+              {errors.email && <FieldError msg={errors.email} />}
             </div>
 
             <div>
@@ -124,32 +126,9 @@ const LoginPage = () => {
                     focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100
                     ${errors.password ? 'border-red-400 bg-red-50 focus:border-red-400 focus:ring-red-100' : 'border-slate-200'}`}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                >
-                  {showPassword ? (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                    </svg>
-                  ) : (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  )}
-                </button>
+                <TogglePasswordBtn show={showPassword} onClick={() => setShowPassword((p) => !p)} />
               </div>
-              {errors.password && (
-                <p className="mt-1.5 text-xs text-red-500 flex items-center gap-1">
-                  <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                  {errors.password}
-                </p>
-              )}
+              {errors.password && <FieldError msg={errors.password} />}
             </div>
 
             <button
@@ -157,17 +136,7 @@ const LoginPage = () => {
               disabled={loading}
               className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium rounded-lg transition-colors duration-150 flex items-center justify-center gap-2 mt-2"
             >
-              {loading ? (
-                <>
-                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                  </svg>
-                  Iniciando sesión...
-                </>
-              ) : (
-                'Iniciar sesión'
-              )}
+              {loading ? <Spinner label="Iniciando sesión..." /> : 'Iniciar sesión'}
             </button>
           </form>
         </div>
@@ -182,5 +151,46 @@ const LoginPage = () => {
     </div>
   );
 };
+
+// ─── Subcomponentes ───────────────────────────────────────────────
+
+const FieldError = ({ msg }) => (
+  <p className="mt-1.5 text-xs text-red-500 flex items-center gap-1">
+    <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+    </svg>
+    {msg}
+  </p>
+);
+
+const Spinner = ({ label }) => (
+  <>
+    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+    </svg>
+    {label}
+  </>
+);
+
+const TogglePasswordBtn = ({ show, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+    aria-label={show ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+  >
+    {show ? (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+      </svg>
+    ) : (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+      </svg>
+    )}
+  </button>
+);
 
 export default LoginPage;
