@@ -1,68 +1,80 @@
 package com.bffservice.controller;
 
-import com.bffservice.client.PatientClient;
 import com.bffservice.client.RequestClient;
 import com.bffservice.client.UserClient;
 import com.bffservice.client.WaitingListClient;
-import com.bffservice.dto.PatientDTO;
 import com.bffservice.dto.RequestDTO;
 import com.bffservice.dto.UserDTO;
 import com.bffservice.dto.WaitingListDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/bff")
 public class BffController {
 
-    private final PatientClient patientClient;
     private final RequestClient requestClient;
     private final WaitingListClient waitingListClient;
     private final UserClient userClient;
 
-    public BffController(PatientClient patientClient,
-                         RequestClient requestClient,
+    public BffController(RequestClient requestClient,
                          WaitingListClient waitingListClient,
                          UserClient userClient) {
-        this.patientClient = patientClient;
         this.requestClient = requestClient;
         this.waitingListClient = waitingListClient;
         this.userClient = userClient;
     }
 
-    // ─── PATIENTS ────────────────────────────────────────────────
+    // ─── USERS ───────────────────────────────────────────────────
 
-    @GetMapping("/patients")
-    public ResponseEntity<List<PatientDTO>> getAllPatients() {
-        return ResponseEntity.ok(patientClient.getAllPatients());
+    @GetMapping("/users")
+    public ResponseEntity<List<UserDTO>> getAllUsers() {
+        return ResponseEntity.ok(userClient.getAllUsers());
     }
 
-    @GetMapping("/patients/{id}")
-    public ResponseEntity<PatientDTO> getPatientById(@PathVariable("id") Long id) {
-        return ResponseEntity.ok(patientClient.getPatientById(id));
+    @GetMapping("/users/{id}")
+    public ResponseEntity<UserDTO> getUserById(@PathVariable("id") Long id) {
+        return ResponseEntity.ok(userClient.getUserById(id));
     }
 
-    @GetMapping("/patients/rut/{rut}")
-    public ResponseEntity<PatientDTO> getPatientByRut(@PathVariable("rut") String rut) {
-        return ResponseEntity.ok(patientClient.getPatientByRut(rut));
+    @GetMapping("/users/rut/{rut}")
+    public ResponseEntity<UserDTO> getUserByRut(@PathVariable("rut") String rut) {
+        return ResponseEntity.ok(userClient.getUserByRut(rut));
     }
 
-    @PostMapping("/patients")
-    public ResponseEntity<PatientDTO> createPatient(@RequestBody PatientDTO patient) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(patientClient.createPatient(patient));
+    @GetMapping("/users/email/{email}")
+    public ResponseEntity<UserDTO> getUserByEmail(@PathVariable("email") String email) {
+        return ResponseEntity.ok(userClient.getUserByEmail(email));
     }
 
-    @PutMapping("/patients/{id}")
-    public ResponseEntity<PatientDTO> updatePatient(@PathVariable("id") Long id,
-                                                     @RequestBody PatientDTO patient) {
-        return ResponseEntity.ok(patientClient.updatePatient(id, patient));
+    @GetMapping("/users/role/{role}")
+    public ResponseEntity<List<UserDTO>> getUsersByRole(@PathVariable("role") String role) {
+        return ResponseEntity.ok(userClient.getUsersByRole(role));
     }
 
-    @DeleteMapping("/patients/{id}")
-    public ResponseEntity<Void> deletePatient(@PathVariable("id") Long id) {
-        patientClient.deletePatient(id);
+    @GetMapping("/users/medicos")
+    public ResponseEntity<List<UserDTO>> getMedicos() {
+        return ResponseEntity.ok(userClient.getMedicos());
+    }
+
+    @PostMapping("/users")
+    public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO user) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(userClient.createUser(user));
+    }
+
+    @PutMapping("/users/{id}")
+    public ResponseEntity<UserDTO> updateUser(@PathVariable("id") Long id,
+                                               @RequestBody UserDTO user) {
+        return ResponseEntity.ok(userClient.updateUser(id, user));
+    }
+
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable("id") Long id) {
+        userClient.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -78,9 +90,25 @@ public class BffController {
         return ResponseEntity.ok(requestClient.getRequestById(id));
     }
 
-    @GetMapping("/requests/rut/{rut}")
-    public ResponseEntity<List<RequestDTO>> getRequestsByRut(@PathVariable("rut") String rut) {
-        return ResponseEntity.ok(requestClient.getRequestsByRut(rut));
+    @GetMapping("/requests/user/{userId}")
+    public ResponseEntity<List<RequestDTO>> getRequestsByUserId(@PathVariable("userId") Long userId) {
+        return ResponseEntity.ok(requestClient.getRequestsByUserId(userId));
+    }
+
+    @GetMapping("/requests/medico/{medicoId}")
+    public ResponseEntity<List<RequestDTO>> getRequestsByMedicoId(@PathVariable("medicoId") Long medicoId) {
+        return ResponseEntity.ok(requestClient.getRequestsByMedicoId(medicoId));
+    }
+
+    @GetMapping("/requests/especialidad/{especialidad}")
+    public ResponseEntity<List<RequestDTO>> getRequestsByEspecialidad(
+            @PathVariable("especialidad") String especialidad) {
+        return ResponseEntity.ok(requestClient.getRequestsByEspecialidad(especialidad));
+    }
+
+    @GetMapping("/requests/estado/{estado}")
+    public ResponseEntity<List<RequestDTO>> getRequestsByEstado(@PathVariable("estado") String estado) {
+        return ResponseEntity.ok(requestClient.getRequestsByEstado(estado));
     }
 
     @PostMapping("/requests")
@@ -112,10 +140,28 @@ public class BffController {
         return ResponseEntity.ok(waitingListClient.getById(id));
     }
 
-    @GetMapping("/waiting-list/patient/{patientId}")
-    public ResponseEntity<List<WaitingListDTO>> getWaitingListByPatientId(
-            @PathVariable("patientId") Long patientId) {
-        return ResponseEntity.ok(waitingListClient.getByPatientId(patientId));
+    @GetMapping("/waiting-list/user/{userId}")
+    public ResponseEntity<List<WaitingListDTO>> getWaitingListByUserId(
+            @PathVariable("userId") Long userId) {
+        return ResponseEntity.ok(waitingListClient.getByUserId(userId));
+    }
+
+    @GetMapping("/waiting-list/medico/{medicoId}")
+    public ResponseEntity<List<WaitingListDTO>> getWaitingListByMedicoId(
+            @PathVariable("medicoId") Long medicoId) {
+        return ResponseEntity.ok(waitingListClient.getByMedicoId(medicoId));
+    }
+
+    @GetMapping("/waiting-list/specialty/{specialty}")
+    public ResponseEntity<List<WaitingListDTO>> getWaitingListBySpecialty(
+            @PathVariable("specialty") String specialty) {
+        return ResponseEntity.ok(waitingListClient.getBySpecialty(specialty));
+    }
+
+    @GetMapping("/waiting-list/status/{status}")
+    public ResponseEntity<List<WaitingListDTO>> getWaitingListByStatus(
+            @PathVariable("status") String status) {
+        return ResponseEntity.ok(waitingListClient.getByStatus(status));
     }
 
     @PostMapping("/waiting-list")
@@ -135,49 +181,56 @@ public class BffController {
         return ResponseEntity.noContent().build();
     }
 
-    // ─── USERS ───────────────────────────────────────────────────
+    // ─── ENDPOINTS COMBINADOS ─────────────────────────────────────
 
-    @GetMapping("/users")
-    public ResponseEntity<List<UserDTO>> getAllUsers() {
-        return ResponseEntity.ok(userClient.getAllUsers());
+    // Dashboard del paciente: datos del usuario + sus solicitudes + su lista de espera
+    @GetMapping("/dashboard/user/{userId}")
+    public ResponseEntity<Map<String, Object>> getUserDashboard(@PathVariable("userId") Long userId) {
+        UserDTO user = userClient.getUserById(userId);
+        List<RequestDTO> requests = requestClient.getRequestsByUserId(userId);
+        List<WaitingListDTO> waitingList = waitingListClient.getByUserId(userId);
+
+        Map<String, Object> dashboard = new HashMap<>();
+        dashboard.put("user", user);
+        dashboard.put("requests", requests);
+        dashboard.put("waitingList", waitingList);
+
+        return ResponseEntity.ok(dashboard);
     }
 
-    @GetMapping("/users/{id}")
-    public ResponseEntity<UserDTO> getUserById(@PathVariable("id") Long id) {
-        return ResponseEntity.ok(userClient.getUserById(id));
+    // Dashboard del médico: datos del médico + citas asignadas + lista de espera a su cargo
+    @GetMapping("/dashboard/medico/{medicoId}")
+    public ResponseEntity<Map<String, Object>> getMedicoDashboard(@PathVariable("medicoId") Long medicoId) {
+        UserDTO medico = userClient.getUserById(medicoId);
+        List<RequestDTO> citas = requestClient.getRequestsByMedicoId(medicoId);
+        List<WaitingListDTO> waitingList = waitingListClient.getByMedicoId(medicoId);
+
+        Map<String, Object> dashboard = new HashMap<>();
+        dashboard.put("medico", medico);
+        dashboard.put("citas", citas);
+        dashboard.put("waitingList", waitingList);
+
+        return ResponseEntity.ok(dashboard);
     }
 
-    @PostMapping("/users")
-    public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO user) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(userClient.createUser(user));
-    }
+    // Dashboard del admin: todos los usuarios, solicitudes y lista de espera
+    @GetMapping("/dashboard/admin")
+    public ResponseEntity<Map<String, Object>> getAdminDashboard() {
+        List<UserDTO> users = userClient.getAllUsers();
+        List<RequestDTO> requests = requestClient.getAllRequests();
+        List<WaitingListDTO> waitingList = waitingListClient.getAll();
+        List<UserDTO> medicos = userClient.getMedicos();
 
-    @PutMapping("/users/{id}")
-    public ResponseEntity<UserDTO> updateUser(@PathVariable("id") Long id,
-                                               @RequestBody UserDTO user) {
-        return ResponseEntity.ok(userClient.updateUser(id, user));
-    }
+        Map<String, Object> dashboard = new HashMap<>();
+        dashboard.put("totalUsuarios", users.size());
+        dashboard.put("totalSolicitudes", requests.size());
+        dashboard.put("totalEnEspera", waitingList.size());
+        dashboard.put("totalMedicos", medicos.size());
+        dashboard.put("usuarios", users);
+        dashboard.put("medicos", medicos);
+        dashboard.put("solicitudes", requests);
+        dashboard.put("listaEspera", waitingList);
 
-    @DeleteMapping("/users/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable("id") Long id) {
-        userClient.deleteUser(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    // ─── ENDPOINT COMBINADO ───────────────────────────────────────
-    // Este endpoint es el que justifica el uso del patrón BFF,
-    // ya que agrega datos de múltiples microservicios en una sola respuesta
-
-    @GetMapping("/dashboard/patient/{rut}")
-    public ResponseEntity<?> getPatientDashboard(@PathVariable("rut") String rut) {
-        PatientDTO patient = patientClient.getPatientByRut(rut);
-        List<RequestDTO> requests = requestClient.getRequestsByRut(rut);
-        List<WaitingListDTO> waitingList = waitingListClient.getByPatientId(patient.getId());
-
-        return ResponseEntity.ok(new java.util.HashMap<>() {{
-            put("patient", patient);
-            put("requests", requests);
-            put("waitingList", waitingList);
-        }});
+        return ResponseEntity.ok(dashboard);
     }
 }
