@@ -6,7 +6,6 @@ import com.waitinglistservice.service.WaitingListService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -31,9 +30,29 @@ public class WaitingListController {
         return ResponseEntity.ok(waitingList);
     }
 
-    @GetMapping("/patient/{patientId}")
-    public ResponseEntity<List<WaitingList>> getByPatientId(@PathVariable("patientId") Long patientId) {
-        return ResponseEntity.ok(service.getByPatientId(patientId));
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<WaitingList>> getByUserId(@PathVariable("userId") Long userId) {
+        return ResponseEntity.ok(service.getByUserId(userId));
+    }
+
+    @GetMapping("/medico/{medicoId}")
+    public ResponseEntity<List<WaitingList>> getByMedicoId(@PathVariable("medicoId") Long medicoId) {
+        return ResponseEntity.ok(service.getByMedicoId(medicoId));
+    }
+
+    @GetMapping("/specialty/{specialty}")
+    public ResponseEntity<List<WaitingList>> getBySpecialty(@PathVariable("specialty") String specialty) {
+        return ResponseEntity.ok(service.getBySpecialty(specialty));
+    }
+
+    @GetMapping("/status/{status}")
+    public ResponseEntity<List<WaitingList>> getByStatus(@PathVariable("status") String status) {
+        return ResponseEntity.ok(service.getByStatus(status));
+    }
+
+    @GetMapping("/priority/{priority}")
+    public ResponseEntity<List<WaitingList>> getByPriority(@PathVariable("priority") String priority) {
+        return ResponseEntity.ok(service.getByPriority(priority));
     }
 
     @PostMapping
@@ -53,15 +72,5 @@ public class WaitingListController {
     public ResponseEntity<Void> delete(@PathVariable("id") Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/specialty/{specialty}")
-    public ResponseEntity<List<WaitingList>> getBySpecialty(@PathVariable("specialty") String specialty) {
-        return ResponseEntity.ok(service.getBySpecialty(specialty));
-    }
-
-    @GetMapping("/status/{status}")
-    public ResponseEntity<List<WaitingList>> getByStatus(@PathVariable("status") String status) {
-        return ResponseEntity.ok(service.getByStatus(status));
     }
 }

@@ -4,7 +4,6 @@ import com.waitinglistservice.entity.WaitingList;
 import com.waitinglistservice.exception.ResourceNotFoundException;
 import com.waitinglistservice.repository.WaitingListRepository;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -25,8 +24,24 @@ public class WaitingListService {
         return repository.findById(id);
     }
 
-    public List<WaitingList> getByPatientId(Long patientId) {
-        return repository.findByPatientId(patientId);
+    public List<WaitingList> getByUserId(Long userId) {
+        return repository.findByUserId(userId);
+    }
+
+    public List<WaitingList> getByMedicoId(Long medicoId) {
+        return repository.findByMedicoId(medicoId);
+    }
+
+    public List<WaitingList> getBySpecialty(String specialty) {
+        return repository.findBySpecialty(specialty);
+    }
+
+    public List<WaitingList> getByStatus(String status) {
+        return repository.findByStatus(status);
+    }
+
+    public List<WaitingList> getByPriority(String priority) {
+        return repository.findByPriority(priority);
     }
 
     public WaitingList create(WaitingList waitingList) {
@@ -35,24 +50,19 @@ public class WaitingListService {
 
     public WaitingList update(Long id, WaitingList details) {
         return repository.findById(id).map(existing -> {
+            existing.setUserId(details.getUserId());
+            existing.setMedicoId(details.getMedicoId());
             existing.setSpecialty(details.getSpecialty());
             existing.setPriority(details.getPriority());
             existing.setStatus(details.getStatus());
             return repository.save(existing);
-        }).orElseThrow(() -> new ResourceNotFoundException("Registro de lista de espera no encontrado con ID: " + id));
+        }).orElseThrow(() -> new ResourceNotFoundException("Registro no encontrado con ID: " + id));
     }
 
     public void delete(Long id) {
         if (!repository.existsById(id)) {
-            throw new ResourceNotFoundException("Registro de lista de espera no encontrado con ID: " + id);
+            throw new ResourceNotFoundException("Registro no encontrado con ID: " + id);
         }
         repository.deleteById(id);
-    }
-    public List<WaitingList> getBySpecialty(String specialty) {
-        return repository.findBySpecialty(specialty);
-    }
-
-    public List<WaitingList> getByStatus(String status) {
-        return repository.findByStatus(status);
     }
 }

@@ -18,10 +18,13 @@ public class WaitingList {
     private Long id;
 
     @Column(nullable = false)
-    private Long patientId; 
+    private Long userId; 
+
+    @Column(nullable = false)
+    private Long medicoId; 
 
     @Column(nullable = false, length = 100)
-    private String specialty; 
+    private String specialty;
 
     @Column(nullable = false, length = 20)
     private String priority; 
@@ -34,6 +37,8 @@ public class WaitingList {
 
     @PrePersist
     protected void onCreate() {
-        requestDate = LocalDateTime.now(); 
+        requestDate = LocalDateTime.now();
+        if (status == null) status = "EN_ESPERA";
+        if (priority == null) priority = "MEDIA";
     }
 }
