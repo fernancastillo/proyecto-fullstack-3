@@ -9,7 +9,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UserDTO {
     private Long id;
-    private String username;
+    private String rut;
+    private String dv;
+    private String name;
+    private String lastname;
     private String email;
+    private String phone;
+    private String region;
+    private String comuna;
+    private String address;
     private String role;
+    private String especialidad;
 }

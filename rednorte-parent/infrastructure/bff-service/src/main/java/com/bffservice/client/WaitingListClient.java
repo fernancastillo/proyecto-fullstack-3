@@ -14,8 +14,17 @@ public interface WaitingListClient {
     @GetMapping("/waiting-list/{id}")
     WaitingListDTO getById(@PathVariable("id") Long id);
 
-    @GetMapping("/waiting-list/patient/{patientId}")
-    List<WaitingListDTO> getByPatientId(@PathVariable("patientId") Long patientId);
+    @GetMapping("/waiting-list/user/{userId}")
+    List<WaitingListDTO> getByUserId(@PathVariable("userId") Long userId);
+
+    @GetMapping("/waiting-list/medico/{medicoId}")
+    List<WaitingListDTO> getByMedicoId(@PathVariable("medicoId") Long medicoId);
+
+    @GetMapping("/waiting-list/specialty/{specialty}")
+    List<WaitingListDTO> getBySpecialty(@PathVariable("specialty") String specialty);
+
+    @GetMapping("/waiting-list/status/{status}")
+    List<WaitingListDTO> getByStatus(@PathVariable("status") String status);
 
     @PostMapping("/waiting-list")
     WaitingListDTO create(@RequestBody WaitingListDTO waitingList);

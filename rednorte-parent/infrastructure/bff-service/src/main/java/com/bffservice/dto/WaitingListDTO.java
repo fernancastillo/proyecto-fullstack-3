@@ -10,7 +10,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class WaitingListDTO {
     private Long id;
-    private Long patientId;
+    private Long userId;
+    private Long medicoId;
     private String specialty;
     private String priority;
     private String status;

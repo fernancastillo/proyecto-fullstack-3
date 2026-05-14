@@ -14,8 +14,17 @@ public interface RequestClient {
     @GetMapping("/requests/{id}")
     RequestDTO getRequestById(@PathVariable("id") Long id);
 
-    @GetMapping("/requests/rut/{rut}")
-    List<RequestDTO> getRequestsByRut(@PathVariable("rut") String rut);
+    @GetMapping("/requests/user/{userId}")
+    List<RequestDTO> getRequestsByUserId(@PathVariable("userId") Long userId);
+
+    @GetMapping("/requests/medico/{medicoId}")
+    List<RequestDTO> getRequestsByMedicoId(@PathVariable("medicoId") Long medicoId);
+
+    @GetMapping("/requests/especialidad/{especialidad}")
+    List<RequestDTO> getRequestsByEspecialidad(@PathVariable("especialidad") String especialidad);
+
+    @GetMapping("/requests/estado/{estado}")
+    List<RequestDTO> getRequestsByEstado(@PathVariable("estado") String estado);
 
     @PostMapping("/requests")
     RequestDTO createRequest(@RequestBody RequestDTO request);
