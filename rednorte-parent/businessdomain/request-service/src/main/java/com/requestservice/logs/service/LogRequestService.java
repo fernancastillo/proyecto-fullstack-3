@@ -4,6 +4,8 @@ import com.requestservice.logs.entity.LogRequest;
 import com.requestservice.logs.repository.LogRequestRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -38,5 +40,9 @@ public class LogRequestService {
 
     public List<LogRequest> obtenerLogsConError() {
         return repository.findByErrorMensajeIsNotNullOrderByFechaDesc();
+    }
+
+    public List<LogRequest> obtenerLogsPorRango(LocalDateTime inicio, LocalDateTime fin) {
+        return repository.findByFechaBetween(inicio, fin);
     }
 }

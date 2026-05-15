@@ -3,6 +3,10 @@ package com.bffservice.controller;
 import com.bffservice.client.RequestClient;
 import com.bffservice.client.UserClient;
 import com.bffservice.client.WaitingListClient;
+import com.bffservice.client.UserLogClient;
+import com.bffservice.client.RequestLogClient;
+import com.bffservice.client.WaitingListLogClient;
+import com.bffservice.dto.LogRequestDTO;
 import com.bffservice.dto.RegisterRequestDTO;
 import com.bffservice.dto.RequestDTO;
 import com.bffservice.dto.UserDTO;
@@ -11,6 +15,7 @@ import feign.FeignException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,16 +24,25 @@ import java.util.Map;
 @RequestMapping("/bff")
 public class BffController {
 
-    private final RequestClient requestClient;
-    private final WaitingListClient waitingListClient;
-    private final UserClient userClient;
+    private final RequestClient        requestClient;
+    private final WaitingListClient    waitingListClient;
+    private final UserClient           userClient;
+    private final UserLogClient        userLogClient;
+    private final RequestLogClient     requestLogClient;
+    private final WaitingListLogClient waitingListLogClient;
 
-    public BffController(RequestClient requestClient,
-                         WaitingListClient waitingListClient,
-                         UserClient userClient) {
-        this.requestClient = requestClient;
-        this.waitingListClient = waitingListClient;
-        this.userClient = userClient;
+    public BffController(RequestClient        requestClient,
+                         WaitingListClient    waitingListClient,
+                         UserClient           userClient,
+                         UserLogClient        userLogClient,
+                         RequestLogClient     requestLogClient,
+                         WaitingListLogClient waitingListLogClient) {
+        this.requestClient        = requestClient;
+        this.waitingListClient    = waitingListClient;
+        this.userClient           = userClient;
+        this.userLogClient        = userLogClient;
+        this.requestLogClient     = requestLogClient;
+        this.waitingListLogClient = waitingListLogClient;
     }
 
     // ─── USERS ───────────────────────────────────────────────────
@@ -234,21 +248,50 @@ public class BffController {
 
     @GetMapping("/dashboard/admin")
     public ResponseEntity<Map<String, Object>> getAdminDashboard() {
-        List<UserDTO> users = userClient.getAllUsers();
+        List<UserDTO> users       = userClient.getAllUsers();
         List<RequestDTO> requests = requestClient.getAllRequests();
         List<WaitingListDTO> waitingList = waitingListClient.getAll();
-        List<UserDTO> medicos = userClient.getMedicos();
+        List<UserDTO> medicos     = userClient.getMedicos();
 
         Map<String, Object> dashboard = new HashMap<>();
-        dashboard.put("totalUsuarios", users.size());
+        dashboard.put("totalUsuarios",    users.size());
         dashboard.put("totalSolicitudes", requests.size());
-        dashboard.put("totalEnEspera", waitingList.size());
-        dashboard.put("totalMedicos", medicos.size());
-        dashboard.put("usuarios", users);
-        dashboard.put("medicos", medicos);
+        dashboard.put("totalEnEspera",    waitingList.size());
+        dashboard.put("totalMedicos",     medicos.size());
+        dashboard.put("usuarios",    users);
+        dashboard.put("medicos",     medicos);
         dashboard.put("solicitudes", requests);
         dashboard.put("listaEspera", waitingList);
 
         return ResponseEntity.ok(dashboard);
+    }
+
+    // ─── LOGS: reporte por rango de fechas (agrega los 3 microservicios) ──────
+
+    @GetMapping("/logs/rango")
+    public ResponseEntity<List<LogRequestDTO>> getLogsPorRango(
+            @RequestParam("inicio") String inicio,
+            @RequestParam("fin")    String fin) {
+
+        List<LogRequestDTO> todos = new ArrayList<>();
+
+        try { todos.addAll(userLogClient.getLogsPorRango(inicio, fin)); }
+        catch (Exception ignored) { /* microservicio no disponible */ }
+
+        try { todos.addAll(requestLogClient.getLogsPorRango(inicio, fin)); }
+        catch (Exception ignored) { }
+
+        try { todos.addAll(waitingListLogClient.getLogsPorRango(inicio, fin)); }
+        catch (Exception ignored) { }
+
+        // Ordenar por fecha descendente
+        todos.sort((a, b) -> {
+            if (a.getFecha() == null && b.getFecha() == null) return 0;
+            if (a.getFecha() == null) return 1;
+            if (b.getFecha() == null) return -1;
+            return b.getFecha().compareTo(a.getFecha());
+        });
+
+        return ResponseEntity.ok(todos);
     }
 }

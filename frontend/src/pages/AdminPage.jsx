@@ -1,14 +1,16 @@
 import { useState } from 'react';
-import DashboardTab from '../components/admin/DashboardTab';
+import DashboardTab   from '../components/admin/DashboardTab';
 import MedicosAdminsTab from '../components/admin/MedicosAdminsTab';
-import PacientesTab from '../components/admin/PacientesTab';
+import PacientesTab   from '../components/admin/PacientesTab';
 import CrearUsuarioTab from '../components/admin/CrearUsuarioTab';
+import ReporteTab     from '../components/admin/ReporteTab';
 
 const TABS = [
-  { id: 'dashboard',  label: 'Dashboard'           },
-  { id: 'medicos',    label: 'Médicos y Admins'    },
-  { id: 'pacientes',  label: 'Pacientes'          },
-  { id: 'crear',      label: 'Crear Usuario'         },
+  { id: 'dashboard',  label: 'Dashboard'        },
+  { id: 'medicos',    label: 'Médicos y Admins' },
+  { id: 'pacientes',  label: 'Pacientes'        },
+  { id: 'crear',      label: 'Crear Usuario'    },
+  { id: 'reporte',    label: 'Reporte'          },
 ];
 
 const AdminPage = () => {
@@ -36,10 +38,11 @@ const AdminPage = () => {
       </div>
 
       {/* Contenido del tab activo */}
-      {activeTab === 'dashboard' && <DashboardTab />}
-      {activeTab === 'medicos'   && <MedicosAdminsTab />}
-      {activeTab === 'pacientes' && <PacientesTab />}
-      {activeTab === 'crear'     && <CrearUsuarioTab />}
+      {activeTab === 'dashboard'  && <DashboardTab />}
+      {activeTab === 'medicos'    && <MedicosAdminsTab />}
+      {activeTab === 'pacientes'  && <PacientesTab />}
+      {activeTab === 'crear'      && <CrearUsuarioTab />}
+      {activeTab === 'reporte'    && <ReporteTab />}
     </div>
   );
 };
