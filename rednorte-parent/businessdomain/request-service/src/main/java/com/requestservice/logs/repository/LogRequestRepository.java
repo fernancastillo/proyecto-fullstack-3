@@ -14,6 +14,8 @@ public interface LogRequestRepository extends JpaRepository<LogRequest, Long> {
     List<LogRequest> findByFechaBetween(LocalDateTime inicio, LocalDateTime fin);
 
     List<LogRequest> findTop20ByOrderByFechaDesc();
+    
+    List<LogRequest> findByErrorMensajeIsNotNullOrderByFechaDesc();
 
     @Query("SELECT AVG(l.tiempoRespuesta) FROM LogRequest l WHERE l.endpoint = :endpoint")
     Double getTiempoPromedioByEndpoint(@Param("endpoint") String endpoint);

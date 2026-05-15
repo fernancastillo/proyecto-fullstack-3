@@ -34,6 +34,11 @@ public class LogController {
         return ResponseEntity.ok(logService.obtenerLogsPorMicroservicio(nombre));
     }
 
+    @GetMapping("/errores")
+    public ResponseEntity<List<LogRequest>> obtenerLogsConError() {
+        return ResponseEntity.ok(logService.obtenerLogsConError());
+    }
+
     @GetMapping("/estadisticas/{endpoint}")
     public ResponseEntity<Map<String, Object>> obtenerEstadisticas(
             @PathVariable String endpoint) {
