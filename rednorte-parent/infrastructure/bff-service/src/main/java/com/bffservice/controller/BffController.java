@@ -6,6 +6,9 @@ import com.bffservice.client.WaitingListClient;
 import com.bffservice.dto.RequestDTO;
 import com.bffservice.dto.UserDTO;
 import com.bffservice.dto.WaitingListDTO;
+
+import feign.FeignException;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -62,10 +65,21 @@ public class BffController {
     }
 
     @PostMapping("/users")
-    public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO user) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(userClient.createUser(user));
+    public ResponseEntity<?> createUser(@RequestBody UserDTO user) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED).body(userClient.createUser(user));
+        } catch (FeignException.Conflict e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("message", "Ya existe un usuario con ese RUT o correo electrónico."));
+        } catch (FeignException.BadRequest e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", "Datos inválidos. Revisa los campos del formulario."));
+        } catch (FeignException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Error al crear el usuario."));
+        }
     }
-
+    
     @PutMapping("/users/{id}")
     public ResponseEntity<UserDTO> updateUser(@PathVariable("id") Long id,
                                                @RequestBody UserDTO user) {
