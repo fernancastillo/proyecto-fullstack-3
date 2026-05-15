@@ -1,11 +1,12 @@
 package com.bffservice.client;
 
+import com.bffservice.client.fallback.RequestClientFallback;
 import com.bffservice.dto.RequestDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-@FeignClient(name = "REQUEST-SERVICE")
+@FeignClient(name = "REQUEST-SERVICE", fallback = RequestClientFallback.class)
 public interface RequestClient {
 
     @GetMapping("/requests")
