@@ -10,7 +10,6 @@ import feign.FeignException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.Map;
 
 @RestController
@@ -25,15 +24,11 @@ public class AuthController {
         this.jwtUtil = jwtUtil;
     }
 
-    /**
-     * POST /bff/auth/register
-     * Registra un nuevo usuario (rol PACIENTE por defecto).
-     * Devuelve el token JWT + datos del usuario creado.
-     */
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequestDTO req) {
         try {
-            UserDTO created = userClient.registerUser(req);
+            // Cambiado de registerUser a createUser
+            UserDTO created = userClient.createUser(req);
             String token = jwtUtil.generateToken(
                     created.getId(), created.getEmail(),
                     created.getRole(), created.getName(), created.getLastname());
@@ -53,10 +48,6 @@ public class AuthController {
         }
     }
 
-    /**
-     * POST /bff/auth/login
-     * Valida credenciales y devuelve el token JWT + datos del usuario.
-     */
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequestDTO req) {
         try {
