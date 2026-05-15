@@ -36,8 +36,24 @@ public class LoggingFilter implements Filter {
             return;
         }
 
+        String errorMensaje = null;
+
         try {
             chain.doFilter(request, response);
+
+            // Capturar errores HTTP (4xx y 5xx) aunque no haya excepción
+            if (res.getStatus() >= 400) {
+                errorMensaje = "HTTP " + res.getStatus() + " en " + req.getMethod() + " " + uri;
+            }
+
+        } catch (Exception ex) {
+            // Capturar excepción real
+            errorMensaje = ex.getClass().getSimpleName() + ": " + ex.getMessage();
+            // Truncar si es muy largo
+            if (errorMensaje != null && errorMensaje.length() > 500) {
+                errorMensaje = errorMensaje.substring(0, 497) + "...";
+            }
+            throw ex; // relanzar para que Spring la maneje
         } finally {
             long fin = System.currentTimeMillis();
             long tiempoRespuesta = fin - inicio;
@@ -45,7 +61,8 @@ public class LoggingFilter implements Filter {
             System.out.println("[" + LocalDateTime.now() + "] " +
                                req.getMethod() + " " + uri +
                                " -> " + res.getStatus() +
-                               " (" + tiempoRespuesta + "ms)");
+                               " (" + tiempoRespuesta + "ms)" +
+                               (errorMensaje != null ? " ERROR: " + errorMensaje : ""));
 
             LogRequest log = new LogRequest();
             log.setEndpoint(uri);
@@ -53,13 +70,13 @@ public class LoggingFilter implements Filter {
             log.setTiempoRespuesta(tiempoRespuesta);
             log.setStatus(res.getStatus());
             log.setFecha(LocalDateTime.now());
-            log.setMicroservicio("patient-service");
+            log.setMicroservicio("request-service");
+            log.setErrorMensaje(errorMensaje);
 
             try {
                 logService.guardar(log);
             } catch (Exception e) {
                 System.err.println("ERROR guardando log en BD: " + e.getMessage());
-                e.printStackTrace();
             }
         }
     }

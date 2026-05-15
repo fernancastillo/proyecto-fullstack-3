@@ -35,4 +35,8 @@ public class LogRequestService {
     public Double obtenerTiempoPromedioEndpoint(String endpoint) {
         return repository.getTiempoPromedioByEndpoint(endpoint);
     }
+
+    public List<LogRequest> obtenerLogsConError() {
+        return repository.findByErrorMensajeIsNotNullOrderByFechaDesc();
+    }
 }

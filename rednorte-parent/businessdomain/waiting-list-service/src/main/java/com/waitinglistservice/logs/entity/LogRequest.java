@@ -23,4 +23,7 @@ public class LogRequest {
     private Integer status;
     private String microservicio;
     private LocalDateTime fecha;
+
+    @Column(length = 500)
+    private String errorMensaje;
 }
