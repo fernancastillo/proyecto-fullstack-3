@@ -1,9 +1,11 @@
-package com.requestservice.logs.controller;
+package com.requestservice.logs.controller;  
 
 import com.requestservice.logs.entity.LogRequest;
 import com.requestservice.logs.service.LogRequestService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,5 +51,16 @@ public class LogController {
         estadisticas.put("tiempoPromedioMs", tiempoPromedio != null ? tiempoPromedio : 0);
 
         return ResponseEntity.ok(estadisticas);
+    }
+
+    @GetMapping("/rango")
+    public ResponseEntity<List<LogRequest>> obtenerLogsPorRango(
+            @RequestParam("inicio") String inicio,
+            @RequestParam("fin")    String fin) {
+
+        LocalDateTime inicioDateTime = LocalDate.parse(inicio).atStartOfDay();
+        LocalDateTime finDateTime    = LocalDate.parse(fin).atTime(23, 59, 59);
+
+        return ResponseEntity.ok(logService.obtenerLogsPorRango(inicioDateTime, finDateTime));
     }
 }

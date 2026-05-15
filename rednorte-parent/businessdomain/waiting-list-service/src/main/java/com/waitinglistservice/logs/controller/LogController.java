@@ -1,9 +1,11 @@
-package com.waitinglistservice.logs.controller;
+package com.waitinglistservice.logs.controller;  // ajusta el package según el microservicio
 
 import com.waitinglistservice.logs.entity.LogRequest;
 import com.waitinglistservice.logs.service.LogRequestService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,5 +51,16 @@ public class LogController {
         estadisticas.put("tiempoPromedioMs", tiempoPromedio != null ? tiempoPromedio : 0);
 
         return ResponseEntity.ok(estadisticas);
+    }
+
+    @GetMapping("/rango")
+    public ResponseEntity<List<LogRequest>> obtenerLogsPorRango(
+            @RequestParam("inicio") String inicio,
+            @RequestParam("fin")    String fin) {
+
+        LocalDateTime inicioDateTime = LocalDate.parse(inicio).atStartOfDay();
+        LocalDateTime finDateTime    = LocalDate.parse(fin).atTime(23, 59, 59);
+
+        return ResponseEntity.ok(logService.obtenerLogsPorRango(inicioDateTime, finDateTime));
     }
 }
