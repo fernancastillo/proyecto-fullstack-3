@@ -7,9 +7,7 @@ import com.bffservice.dto.RegisterRequestDTO;
 import com.bffservice.dto.RequestDTO;
 import com.bffservice.dto.UserDTO;
 import com.bffservice.dto.WaitingListDTO;
-
 import feign.FeignException;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -65,11 +63,11 @@ public class BffController {
         return ResponseEntity.ok(userClient.getMedicos());
     }
 
-    // Ahora recibe RegisterRequestDTO para incluir contraseña
     @PostMapping("/users")
-    public ResponseEntity<?> createUser(@RequestBody UserDTO user) {
+    public ResponseEntity<?> createUser(@RequestBody RegisterRequestDTO request) {
         try {
-            return ResponseEntity.status(HttpStatus.CREATED).body(userClient.createUser(user));
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(userClient.createUser(request));
         } catch (FeignException.Conflict e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(Map.of("message", "Ya existe un usuario con ese RUT o correo electrónico."));
@@ -81,7 +79,7 @@ public class BffController {
                     .body(Map.of("message", "Error al crear el usuario."));
         }
     }
-    
+
     @PutMapping("/users/{id}")
     public ResponseEntity<UserDTO> updateUser(@PathVariable("id") Long id,
                                                @RequestBody UserDTO user) {
@@ -112,7 +110,8 @@ public class BffController {
     }
 
     @GetMapping("/requests/medico/{medicoId}")
-    public ResponseEntity<List<RequestDTO>> getRequestsByMedicoId(@PathVariable("medicoId") Long medicoId) {
+    public ResponseEntity<List<RequestDTO>> getRequestsByMedicoId(
+            @PathVariable("medicoId") Long medicoId) {
         return ResponseEntity.ok(requestClient.getRequestsByMedicoId(medicoId));
     }
 
@@ -123,13 +122,15 @@ public class BffController {
     }
 
     @GetMapping("/requests/estado/{estado}")
-    public ResponseEntity<List<RequestDTO>> getRequestsByEstado(@PathVariable("estado") String estado) {
+    public ResponseEntity<List<RequestDTO>> getRequestsByEstado(
+            @PathVariable("estado") String estado) {
         return ResponseEntity.ok(requestClient.getRequestsByEstado(estado));
     }
 
     @PostMapping("/requests")
     public ResponseEntity<RequestDTO> createRequest(@RequestBody RequestDTO request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(requestClient.createRequest(request));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(requestClient.createRequest(request));
     }
 
     @PutMapping("/requests/{id}")
@@ -181,8 +182,10 @@ public class BffController {
     }
 
     @PostMapping("/waiting-list")
-    public ResponseEntity<WaitingListDTO> createWaitingList(@RequestBody WaitingListDTO waitingList) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(waitingListClient.create(waitingList));
+    public ResponseEntity<WaitingListDTO> createWaitingList(
+            @RequestBody WaitingListDTO waitingList) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(waitingListClient.create(waitingList));
     }
 
     @PutMapping("/waiting-list/{id}")
@@ -200,7 +203,8 @@ public class BffController {
     // ─── ENDPOINTS COMBINADOS ─────────────────────────────────────
 
     @GetMapping("/dashboard/user/{userId}")
-    public ResponseEntity<Map<String, Object>> getUserDashboard(@PathVariable("userId") Long userId) {
+    public ResponseEntity<Map<String, Object>> getUserDashboard(
+            @PathVariable("userId") Long userId) {
         UserDTO user = userClient.getUserById(userId);
         List<RequestDTO> requests = requestClient.getRequestsByUserId(userId);
         List<WaitingListDTO> waitingList = waitingListClient.getByUserId(userId);
@@ -214,7 +218,8 @@ public class BffController {
     }
 
     @GetMapping("/dashboard/medico/{medicoId}")
-    public ResponseEntity<Map<String, Object>> getMedicoDashboard(@PathVariable("medicoId") Long medicoId) {
+    public ResponseEntity<Map<String, Object>> getMedicoDashboard(
+            @PathVariable("medicoId") Long medicoId) {
         UserDTO medico = userClient.getUserById(medicoId);
         List<RequestDTO> citas = requestClient.getRequestsByMedicoId(medicoId);
         List<WaitingListDTO> waitingList = waitingListClient.getByMedicoId(medicoId);
