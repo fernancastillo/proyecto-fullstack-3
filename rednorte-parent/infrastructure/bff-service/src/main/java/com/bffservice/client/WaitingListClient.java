@@ -1,11 +1,12 @@
 package com.bffservice.client;
 
+import com.bffservice.client.fallback.WaitingListClientFallback;
 import com.bffservice.dto.WaitingListDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-@FeignClient(name = "WAITING-LIST-SERVICE")
+@FeignClient(name = "WAITING-LIST-SERVICE", fallback = WaitingListClientFallback.class)
 public interface WaitingListClient {
 
     @GetMapping("/waiting-list")

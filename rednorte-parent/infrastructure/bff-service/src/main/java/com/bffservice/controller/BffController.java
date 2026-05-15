@@ -3,6 +3,7 @@ package com.bffservice.controller;
 import com.bffservice.client.RequestClient;
 import com.bffservice.client.UserClient;
 import com.bffservice.client.WaitingListClient;
+import com.bffservice.dto.RegisterRequestDTO;
 import com.bffservice.dto.RequestDTO;
 import com.bffservice.dto.UserDTO;
 import com.bffservice.dto.WaitingListDTO;
@@ -64,6 +65,7 @@ public class BffController {
         return ResponseEntity.ok(userClient.getMedicos());
     }
 
+    // Ahora recibe RegisterRequestDTO para incluir contraseña
     @PostMapping("/users")
     public ResponseEntity<?> createUser(@RequestBody UserDTO user) {
         try {
@@ -197,7 +199,6 @@ public class BffController {
 
     // ─── ENDPOINTS COMBINADOS ─────────────────────────────────────
 
-    // Dashboard del paciente: datos del usuario + sus solicitudes + su lista de espera
     @GetMapping("/dashboard/user/{userId}")
     public ResponseEntity<Map<String, Object>> getUserDashboard(@PathVariable("userId") Long userId) {
         UserDTO user = userClient.getUserById(userId);
@@ -212,7 +213,6 @@ public class BffController {
         return ResponseEntity.ok(dashboard);
     }
 
-    // Dashboard del médico: datos del médico + citas asignadas + lista de espera a su cargo
     @GetMapping("/dashboard/medico/{medicoId}")
     public ResponseEntity<Map<String, Object>> getMedicoDashboard(@PathVariable("medicoId") Long medicoId) {
         UserDTO medico = userClient.getUserById(medicoId);
@@ -227,7 +227,6 @@ public class BffController {
         return ResponseEntity.ok(dashboard);
     }
 
-    // Dashboard del admin: todos los usuarios, solicitudes y lista de espera
     @GetMapping("/dashboard/admin")
     public ResponseEntity<Map<String, Object>> getAdminDashboard() {
         List<UserDTO> users = userClient.getAllUsers();
