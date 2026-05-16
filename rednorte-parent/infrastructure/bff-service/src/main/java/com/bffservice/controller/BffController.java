@@ -11,14 +11,17 @@ import com.bffservice.dto.RegisterRequestDTO;
 import com.bffservice.dto.RequestDTO;
 import com.bffservice.dto.UserDTO;
 import com.bffservice.dto.WaitingListDTO;
+import com.bffservice.dto.WaitingListEnrichedDTO;
 import feign.FeignException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/bff")
@@ -143,8 +146,24 @@ public class BffController {
 
     @PostMapping("/requests")
     public ResponseEntity<RequestDTO> createRequest(@RequestBody RequestDTO request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(requestClient.createRequest(request));
+        RequestDTO created = requestClient.createRequest(request);
+
+        
+        if ("PENDIENTE".equals(created.getEstado())) {
+            try {
+                WaitingListDTO entry = new WaitingListDTO();
+                entry.setUserId(created.getUserId());
+                entry.setMedicoId(created.getMedicoId());
+                entry.setSpecialty(created.getEspecialidad());
+                entry.setPriority("MEDIA");
+                entry.setStatus("EN_ESPERA");
+                waitingListClient.create(entry);
+            } catch (Exception ignored) {
+                
+            }
+        }
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/requests/{id}")
@@ -164,6 +183,32 @@ public class BffController {
     @GetMapping("/waiting-list")
     public ResponseEntity<List<WaitingListDTO>> getAllWaitingList() {
         return ResponseEntity.ok(waitingListClient.getAll());
+    }
+
+    @GetMapping("/waiting-list/enriched")
+    public ResponseEntity<List<WaitingListEnrichedDTO>> getWaitingListEnriched() {
+        List<WaitingListDTO> waitingList = waitingListClient.getAll();
+        List<UserDTO> users = userClient.getAllUsers();
+
+        Map<Long, UserDTO> userMap = users.stream()
+                .collect(Collectors.toMap(UserDTO::getId, u -> u, (a, b) -> a));
+
+        List<WaitingListEnrichedDTO> enriched = waitingList.stream().map(wl -> {
+            UserDTO patient = userMap.get(wl.getUserId());
+            UserDTO doctor  = userMap.get(wl.getMedicoId());
+
+            String patientName     = patient != null ? patient.getName() + " " + patient.getLastname() : "Desconocido";
+            String doctorName      = doctor  != null ? doctor.getName()  + " " + doctor.getLastname()  : "Desconocido";
+            String doctorEspecialidad = doctor != null ? doctor.getEspecialidad() : "";
+
+            return new WaitingListEnrichedDTO(
+                    wl.getId(), wl.getUserId(), patientName,
+                    wl.getMedicoId(), doctorName, doctorEspecialidad,
+                    wl.getSpecialty(), wl.getPriority(), wl.getStatus(), wl.getRequestDate()
+            );
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(enriched);
     }
 
     @GetMapping("/waiting-list/{id}")
@@ -248,16 +293,28 @@ public class BffController {
 
     @GetMapping("/dashboard/admin")
     public ResponseEntity<Map<String, Object>> getAdminDashboard() {
-        List<UserDTO> users       = userClient.getAllUsers();
-        List<RequestDTO> requests = requestClient.getAllRequests();
+        List<UserDTO>        users       = userClient.getAllUsers();
+        List<RequestDTO>     requests    = requestClient.getAllRequests();
         List<WaitingListDTO> waitingList = waitingListClient.getAll();
-        List<UserDTO> medicos     = userClient.getMedicos();
+        List<UserDTO>        medicos     = userClient.getMedicos();
+
+        long solicitudesActivas  = requests.stream()
+                .filter(r -> "PENDIENTE".equals(r.getEstado()))
+                .count();
+
+        long totalEspecialidades = medicos.stream()
+                .map(UserDTO::getEspecialidad)
+                .filter(e -> e != null && !e.isBlank())
+                .distinct()
+                .count();
 
         Map<String, Object> dashboard = new HashMap<>();
-        dashboard.put("totalUsuarios",    users.size());
-        dashboard.put("totalSolicitudes", requests.size());
-        dashboard.put("totalEnEspera",    waitingList.size());
-        dashboard.put("totalMedicos",     medicos.size());
+        dashboard.put("totalUsuarios",        users.size());
+        dashboard.put("totalSolicitudes",     requests.size());
+        dashboard.put("totalEnEspera",        waitingList.size());
+        dashboard.put("totalMedicos",         medicos.size());
+        dashboard.put("solicitudesActivas",   solicitudesActivas);
+        dashboard.put("totalEspecialidades",  totalEspecialidades);
         dashboard.put("usuarios",    users);
         dashboard.put("medicos",     medicos);
         dashboard.put("solicitudes", requests);
@@ -266,7 +323,7 @@ public class BffController {
         return ResponseEntity.ok(dashboard);
     }
 
-    // ─── LOGS: reporte por rango de fechas (agrega los 3 microservicios) ──────
+    // ─── LOGS ─────────────────────────────────────────────────────
 
     @GetMapping("/logs/rango")
     public ResponseEntity<List<LogRequestDTO>> getLogsPorRango(
@@ -276,15 +333,14 @@ public class BffController {
         List<LogRequestDTO> todos = new ArrayList<>();
 
         try { todos.addAll(userLogClient.getLogsPorRango(inicio, fin)); }
-        catch (Exception ignored) { /* microservicio no disponible */ }
+        catch (Exception ignored) {}
 
         try { todos.addAll(requestLogClient.getLogsPorRango(inicio, fin)); }
-        catch (Exception ignored) { }
+        catch (Exception ignored) {}
 
         try { todos.addAll(waitingListLogClient.getLogsPorRango(inicio, fin)); }
-        catch (Exception ignored) { }
+        catch (Exception ignored) {}
 
-        // Ordenar por fecha descendente
         todos.sort((a, b) -> {
             if (a.getFecha() == null && b.getFecha() == null) return 0;
             if (a.getFecha() == null) return 1;
