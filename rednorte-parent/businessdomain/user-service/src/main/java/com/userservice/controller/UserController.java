@@ -54,6 +54,7 @@ public class UserController {
 
     @GetMapping("/medicos")
     public ResponseEntity<List<User>> getMedicos() {
+        // Solo médicos activos para pacientes
         return ResponseEntity.ok(userService.getMedicos());
     }
 
@@ -84,10 +85,6 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Valida email + contraseña y devuelve el usuario si las credenciales son correctas.
-     * Retorna 401 si son incorrectas o el usuario no existe.
-     */
     @PostMapping("/authenticate")
     public ResponseEntity<User> authenticate(@RequestBody AuthRequest request) {
         Optional<User> userOpt = userService.authenticate(request.getEmail(), request.getPassword());
@@ -95,7 +92,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         User user = userOpt.get();
-        user.setPassword(null); // nunca exponer el hash
+        user.setPassword(null);
         return ResponseEntity.ok(user);
     }
 }

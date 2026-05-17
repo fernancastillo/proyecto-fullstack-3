@@ -42,6 +42,7 @@ public class UserService {
     }
 
     public List<User> getMedicos() {
+        // Solo médicos activos — MEDICO_INACTIVO no aparece en solicitudes
         return userRepository.findByRole("MEDICO");
     }
 
@@ -52,15 +53,12 @@ public class UserService {
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new IllegalArgumentException("Ya existe un usuario con el email: " + user.getEmail());
         }
-        // El rol por defecto es PACIENTE
         if (user.getRole() == null || user.getRole().isBlank()) {
             user.setRole("PACIENTE");
         }
-        // La especialidad solo aplica para MEDICO
-        if (!"MEDICO".equals(user.getRole())) {
+        if (!"MEDICO".equals(user.getRole()) && !"MEDICO_INACTIVO".equals(user.getRole())) {
             user.setEspecialidad(null);
         }
-        // Codificar contraseña con BCrypt
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
@@ -77,7 +75,7 @@ public class UserService {
             if (userDetails.getRole() != null && !userDetails.getRole().isBlank()) {
                 user.setRole(userDetails.getRole());
             }
-            if ("MEDICO".equals(user.getRole())) {
+            if ("MEDICO".equals(user.getRole()) || "MEDICO_INACTIVO".equals(user.getRole())) {
                 user.setEspecialidad(userDetails.getEspecialidad());
             } else {
                 user.setEspecialidad(null);
@@ -93,9 +91,6 @@ public class UserService {
         }).orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con el ID: " + id));
     }
 
-    /**
-     * Valida credenciales. Retorna el usuario si son correctas, vacío si no.
-     */
     public Optional<User> authenticate(String email, String rawPassword) {
         return getUserByEmail(email)
                 .filter(user -> passwordEncoder.matches(rawPassword, user.getPassword()));
