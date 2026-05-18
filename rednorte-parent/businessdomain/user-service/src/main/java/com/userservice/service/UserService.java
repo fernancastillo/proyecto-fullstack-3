@@ -93,6 +93,7 @@ public class UserService {
 
     public Optional<User> authenticate(String email, String rawPassword) {
         return getUserByEmail(email)
+                .filter(user -> !"Deshabilitado".equals(user.getRole())) 
                 .filter(user -> passwordEncoder.matches(rawPassword, user.getPassword()));
     }
 

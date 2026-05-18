@@ -63,4 +63,9 @@ public class UserClientFallback implements UserClient {
     public void deleteUser(Long id) {
         throw new ServiceUnavailableException(SERVICE);
     }
+
+    @Override
+    public void updatePassword(Long id, String newPassword) {
+        throw new ServiceUnavailableException(SERVICE);
+    }
 }

@@ -2,6 +2,7 @@ package com.userservice.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.userservice.entity.User;
+import com.userservice.logs.service.LogRequestService;   
 import com.userservice.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,9 @@ public class UserControllerTest {
 
     @MockitoBean
     private UserService userService;
+
+    @MockitoBean
+    private LogRequestService logRequestService;   // AÑADIDO: satisface la dependencia del LoggingFilter
 
     @Autowired
     private ObjectMapper objectMapper;

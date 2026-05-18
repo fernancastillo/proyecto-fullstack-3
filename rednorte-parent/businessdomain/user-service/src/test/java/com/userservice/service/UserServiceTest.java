@@ -9,6 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Arrays;
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -23,6 +25,9 @@ public class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;  // AÑADIDO
 
     @InjectMocks
     private UserService userService;
@@ -33,18 +38,18 @@ public class UserServiceTest {
     void setUp() {
         mockUser = new User(
             1L,
-            "12345678",  // rut
-            "9",         // dv
-            "Juan",      // name
-            "Pérez",     // lastname
-            "jperez@correo.com", // email
-            "pass123",   // password
-            "+56912345678", // phone
-            "Tarapacá",  // region
-            "Iquique",   // comuna
-            "Av. Arturo Prat 123", // address
-            "PACIENTE",  // role
-            null         // especialidad
+            "12345678",
+            "9",
+            "Juan",
+            "Pérez",
+            "jperez@correo.com",
+            "pass123",
+            "+56912345678",
+            "Tarapacá",
+            "Iquique",
+            "Av. Arturo Prat 123",
+            "PACIENTE",
+            null
         );
     }
 
@@ -76,6 +81,7 @@ public class UserServiceTest {
     void testCreateUser_Success() {
         when(userRepository.existsByRut(mockUser.getRut())).thenReturn(false);
         when(userRepository.existsByEmail(mockUser.getEmail())).thenReturn(false);
+        when(passwordEncoder.encode(anyString())).thenReturn("hashed_password");  // AÑADIDO
         when(userRepository.save(any(User.class))).thenReturn(mockUser);
 
         User created = userService.createUser(mockUser);
@@ -84,6 +90,7 @@ public class UserServiceTest {
         assertEquals("PACIENTE", created.getRole());
         assertNull(created.getEspecialidad());
         verify(userRepository, times(1)).save(mockUser);
+        verify(passwordEncoder, times(1)).encode(anyString());  // AÑADIDO
     }
 
     @Test
@@ -147,5 +154,36 @@ public class UserServiceTest {
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("PACIENTE", result.get(0).getRole());
+    }
+
+    // NUEVO TEST
+    @Test
+    void testAuthenticate_DisabledUser_ReturnsEmpty() {
+        User disabledUser = new User(
+            2L, "87654321", "K", "Ana", "López",
+            "alopez@correo.com", "hashed", "+56911111111",
+            "Santiago", "Santiago", "Calle Falsa 123",
+            "Deshabilitado", null
+        );
+        when(userRepository.findByEmail("alopez@correo.com")).thenReturn(Optional.of(disabledUser));
+
+        Optional<User> result = userService.authenticate("alopez@correo.com", "pass123");
+
+        assertTrue(result.isEmpty(), "Un usuario Deshabilitado no debe poder autenticarse");
+    }
+
+    @Test
+    void testAuthenticate_InactiveMedico_ReturnsEmpty() {
+        User medicoInactivo = new User(
+            3L, "11111111", "1", "Carlos", "Soto",
+            "csoto@correo.com", "hashed", "+56922222222",
+            "Valparaíso", "Viña del Mar", "Av. Marina 456",
+            "MEDICO_INACTIVO", "Cardiología"
+        );
+        when(userRepository.findByEmail("csoto@correo.com")).thenReturn(Optional.of(medicoInactivo));
+
+        Optional<User> result = userService.authenticate("csoto@correo.com", "pass123");
+
+        assertTrue(result.isEmpty(), "Un médico MEDICO_INACTIVO no debe poder autenticarse");
     }
 }
