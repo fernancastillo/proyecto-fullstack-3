@@ -12,6 +12,12 @@ const ProfilePage = () => {
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({});
   const [formErrors, setFormErrors] = useState({});
+  const [pwForm, setPwForm]     = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [pwErrors, setPwErrors] = useState({});
+  const [pwSuccess, setPwSuccess] = useState('');
+  const [pwError, setPwError]   = useState('');
+  const [pwLoading, setPwLoading] = useState(false);
+  const [showPw, setShowPw]     = useState({ current: false, new: false, confirm: false });
 
   // ─── Cargar perfil ───────────────────────────────────────────
   useEffect(() => {
@@ -95,6 +101,44 @@ const ProfilePage = () => {
     }
   };
 
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setPwErrors({});
+    setPwError('');
+    setPwSuccess('');
+
+    // Validación frontend
+    const errs = {};
+    if (!pwForm.currentPassword) errs.currentPassword = 'Ingresa tu contraseña actual.';
+    if (!pwForm.newPassword)     errs.newPassword     = 'Ingresa la nueva contraseña.';
+    else if (pwForm.newPassword.length < 6) errs.newPassword = 'Debe tener al menos 6 caracteres.';
+    if (!pwForm.confirmPassword) errs.confirmPassword = 'Confirma la nueva contraseña.';
+    else if (pwForm.newPassword !== pwForm.confirmPassword) errs.confirmPassword = 'Las contraseñas no coinciden.';
+    if (pwForm.currentPassword && pwForm.newPassword && pwForm.currentPassword === pwForm.newPassword) {
+      errs.newPassword = 'La nueva contraseña debe ser diferente a la actual.';
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setPwErrors(errs);
+      return;
+    }
+
+    setPwLoading(true);
+    try {
+      await api.put(`/users/${user.id}/password`, {
+        currentPassword: pwForm.currentPassword,
+        newPassword:     pwForm.newPassword,
+      });
+      setPwSuccess('Contraseña actualizada correctamente.');
+      setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (err) {
+      const msg = err.response?.data?.message ?? 'Error al cambiar la contraseña.';
+      setPwError(msg);
+    } finally {
+      setPwLoading(false);
+    }
+  };
+
   // ─── Subcomponentes ─────────────────────────────────────────
   const ErrorMsg = ({ msg }) =>
     msg ? (
@@ -105,6 +149,50 @@ const ProfilePage = () => {
         {msg}
       </p>
     ) : null;
+
+    const TogglePasswordBtn = ({ show, onClick }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+      aria-label={show ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+    >
+      {show ? (
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+          />
+        </svg>
+      ) : (
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+          />
+        </svg>
+      )}
+    </button>
+  );
 
   const inputBase = 'w-full px-4 py-2.5 rounded-lg border text-slate-800 text-sm placeholder-slate-300 bg-slate-50 transition-colors duration-150 outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100';
 
@@ -201,48 +289,88 @@ const ProfilePage = () => {
           <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-white text-2xl font-bold">
             {profile?.name?.[0]?.toUpperCase() || '?'}
           </div>
+
           <div>
             <h2 className="text-white text-lg font-semibold">
               {profile?.name} {profile?.lastname}
             </h2>
+
             <p className="text-blue-100 text-sm">{profile?.email}</p>
-            <span className={`inline-flex items-center mt-1.5 text-xs font-medium px-2.5 py-0.5 rounded-full border ${roleBadge[profile?.role] || 'bg-slate-100 text-slate-600 border-slate-200'}`}>
+
+            <span
+              className={`inline-flex items-center mt-1.5 text-xs font-medium px-2.5 py-0.5 rounded-full border ${
+                roleBadge[profile?.role] ||
+                'bg-slate-100 text-slate-600 border-slate-200'
+              }`}
+            >
               {profile?.role}
             </span>
           </div>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSave} noValidate className="px-8 py-6 space-y-5">
+        {/* FORMULARIO PERFIL */}
+        <form
+          onSubmit={handleSave}
+          noValidate
+          className="px-8 py-6 space-y-5"
+        >
 
-          {/* RUT — solo lectura siempre */}
+          {/* RUT */}
           <div className="flex gap-4">
             <div className="flex-1">
               <Field label="RUT" name="rut" placeholder="12345678" disabled />
             </div>
+
             <div className="w-24">
               <Field label="DV" name="dv" placeholder="K" disabled />
             </div>
           </div>
 
           <div className="flex gap-4">
-            <div className="flex-1"><Field label="Nombre" name="name" placeholder="Juan" /></div>
-            <div className="flex-1"><Field label="Apellido" name="lastname" placeholder="Pérez" /></div>
+            <div className="flex-1">
+              <Field label="Nombre" name="name" placeholder="Juan" />
+            </div>
+
+            <div className="flex-1">
+              <Field label="Apellido" name="lastname" placeholder="Pérez" />
+            </div>
           </div>
 
-          <Field label="Correo electrónico" name="email" placeholder="correo@ejemplo.com" />
-          <Field label="Teléfono" name="phone" placeholder="+56912345678" />
+          <Field
+            label="Correo electrónico"
+            name="email"
+            placeholder="correo@ejemplo.com"
+          />
+
+          <Field
+            label="Teléfono"
+            name="phone"
+            placeholder="+56912345678"
+          />
 
           <div className="flex gap-4">
-            <div className="flex-1"><Field label="Región" name="region" placeholder="Tarapacá" /></div>
-            <div className="flex-1"><Field label="Comuna" name="comuna" placeholder="Iquique" /></div>
+            <div className="flex-1">
+              <Field label="Región" name="region" placeholder="Tarapacá" />
+            </div>
+
+            <div className="flex-1">
+              <Field label="Comuna" name="comuna" placeholder="Iquique" />
+            </div>
           </div>
 
-          <Field label="Dirección" name="address" placeholder="Av. Arturo Prat 123" />
+          <Field
+            label="Dirección"
+            name="address"
+            placeholder="Av. Arturo Prat 123"
+          />
 
-          {/* Especialidad — solo para médicos */}
+          {/* Especialidad */}
           {profile?.role === 'MEDICO' && (
-            <Field label="Especialidad" name="especialidad" placeholder="Cardiología" />
+            <Field
+              label="Especialidad"
+              name="especialidad"
+              placeholder="Cardiología"
+            />
           )}
 
           {/* Botones */}
@@ -255,6 +383,7 @@ const ProfilePage = () => {
               >
                 Cancelar
               </button>
+
               <button
                 type="submit"
                 disabled={isSaving}
@@ -262,16 +391,140 @@ const ProfilePage = () => {
               >
                 {isSaving ? (
                   <>
-                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                    <svg
+                      className="w-4 h-4 animate-spin"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v8H4z"
+                      />
                     </svg>
+
                     Guardando...
                   </>
-                ) : 'Guardar cambios'}
+                ) : (
+                  'Guardar cambios'
+                )}
               </button>
             </div>
           )}
+        </form>
+      </div>
+
+      {/* FORMULARIO CAMBIAR CONTRASEÑA */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mt-6">
+
+        <h2 className="text-lg font-semibold text-slate-800 mb-1">
+          Cambiar contraseña
+        </h2>
+
+        <p className="text-sm text-slate-500 mb-5">
+          Ingresa tu contraseña actual y elige una nueva.
+        </p>
+
+        {pwSuccess && (
+          <div className="mb-4 flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-lg">
+            ✓ {pwSuccess}
+          </div>
+        )}
+
+        {pwError && (
+          <div className="mb-4 flex items-center gap-2 bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-lg">
+            ⚠ {pwError}
+          </div>
+        )}
+
+        <form
+          onSubmit={handlePasswordChange}
+          noValidate
+          className="space-y-4"
+        >
+
+          {[
+            {
+              key: 'currentPassword',
+              label: 'Contraseña actual',
+              showKey: 'current',
+            },
+            {
+              key: 'newPassword',
+              label: 'Nueva contraseña',
+              showKey: 'new',
+            },
+            {
+              key: 'confirmPassword',
+              label: 'Confirmar nueva contraseña',
+              showKey: 'confirm',
+            },
+          ].map(({ key, label, showKey }) => (
+            <div key={key}>
+
+              <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">
+                {label}
+              </label>
+
+              <div className="relative">
+                <input
+                  type={showPw[showKey] ? 'text' : 'password'}
+                  value={pwForm[key]}
+                  onChange={(e) =>
+                    setPwForm((f) => ({
+                      ...f,
+                      [key]: e.target.value,
+                    }))
+                  }
+                  placeholder="••••••••"
+                  className={`w-full px-4 py-2.5 pr-10 rounded-lg border text-slate-800 text-sm
+                    placeholder-slate-300 bg-slate-50 outline-none transition-colors
+                    focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100
+                    ${
+                      pwErrors[key]
+                        ? 'border-red-400 bg-red-50'
+                        : 'border-slate-200'
+                    }`}
+                />
+
+                  <TogglePasswordBtn
+                    show={showPw[showKey]}
+                    onClick={() =>
+                      setShowPw((s) => ({
+                        ...s,
+                        [showKey]: !s[showKey],
+                      }))
+                    }
+                  />
+              </div>
+
+              {pwErrors[key] && (
+                <p className="mt-1.5 text-xs text-red-500">
+                  {pwErrors[key]}
+                </p>
+              )}
+            </div>
+          ))}
+
+          <div className="flex justify-end pt-1">
+            <button
+              type="submit"
+              disabled={pwLoading}
+              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              {pwLoading ? 'Guardando...' : 'Cambiar contraseña'}
+            </button>
+          </div>
+
         </form>
       </div>
 

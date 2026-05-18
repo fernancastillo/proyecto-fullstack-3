@@ -7,11 +7,14 @@ import com.bffservice.client.UserLogClient;
 import com.bffservice.client.RequestLogClient;
 import com.bffservice.client.WaitingListLogClient;
 import com.bffservice.dto.LogRequestDTO;
+import com.bffservice.dto.LoginRequestDTO;
 import com.bffservice.dto.RegisterRequestDTO;
 import com.bffservice.dto.RequestDTO;
 import com.bffservice.dto.UserDTO;
 import com.bffservice.dto.WaitingListDTO;
 import com.bffservice.dto.WaitingListEnrichedDTO;
+import com.bffservice.exception.ServiceUnavailableException;
+
 import feign.FeignException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -349,5 +352,56 @@ public class BffController {
         });
 
         return ResponseEntity.ok(todos);
+    }
+
+    @PutMapping("/users/{id}/password")
+    public ResponseEntity<?> changePassword(
+            @PathVariable("id") Long id,
+            @RequestBody Map<String, String> body) {
+        try {
+            String currentPassword = body.get("currentPassword");
+            String newPassword     = body.get("newPassword");
+
+            if (currentPassword == null || currentPassword.isBlank() ||
+                newPassword     == null || newPassword.isBlank()) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("message", "Debes ingresar la contraseña actual y la nueva."));
+            }
+
+            if (newPassword.length() < 6) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("message", "La nueva contraseña debe tener al menos 6 caracteres."));
+            }
+
+            // 1. Obtener el usuario actual
+            UserDTO user = userClient.getUserById(id);
+
+            // 2. Verificar contraseña actual usando authenticate
+            LoginRequestDTO authReq = new LoginRequestDTO();
+            authReq.setEmail(user.getEmail());
+            authReq.setPassword(currentPassword);
+
+            try {
+                userClient.authenticate(authReq);
+            } catch (FeignException.Unauthorized e) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "La contraseña actual es incorrecta."));
+            } catch (FeignException e) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "La contraseña actual es incorrecta."));
+            }
+
+            // 3. Actualizar con la nueva contraseña (el user-service la hashea)
+            userClient.updatePassword(id, newPassword);
+
+            return ResponseEntity.ok(Map.of("message", "Contraseña actualizada correctamente."));
+
+        } catch (ServiceUnavailableException e) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(Map.of("message", "Servicio no disponible. Intenta más tarde."));
+        } catch (FeignException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Error al cambiar la contraseña."));
+        }
     }
 }

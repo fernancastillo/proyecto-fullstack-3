@@ -5,6 +5,7 @@ import com.bffservice.dto.AuthResponseDTO;
 import com.bffservice.dto.LoginRequestDTO;
 import com.bffservice.dto.RegisterRequestDTO;
 import com.bffservice.dto.UserDTO;
+import com.bffservice.exception.ServiceUnavailableException;
 import com.bffservice.util.JwtUtil;
 import feign.FeignException;
 import org.springframework.http.HttpStatus;
@@ -52,6 +53,14 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequestDTO req) {
         try {
             UserDTO user = userClient.authenticate(req);
+
+            // Verificar que el usuario no esté deshabilitado
+            // (doble check en el BFF por si el user-service no lo filtró)
+            if ("Deshabilitado".equals(user.getRole()) || "MEDICO_INACTIVO".equals(user.getRole())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Tu cuenta está deshabilitada. Contacta al administrador."));
+            }
+
             String token = jwtUtil.generateToken(
                     user.getId(), user.getEmail(),
                     user.getRole(), user.getName(), user.getLastname());
@@ -59,6 +68,10 @@ public class AuthController {
                     new AuthResponseDTO(token, user.getId(), user.getEmail(),
                             user.getRole(), user.getName(), user.getLastname(),
                             user.getEspecialidad()));
+
+        } catch (ServiceUnavailableException e) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(Map.of("message", "Servicio no disponible. Intenta más tarde."));
         } catch (FeignException.Unauthorized e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "Correo o contraseña incorrectos."));

@@ -1,6 +1,6 @@
 package com.bffservice.client;
 
-import com.bffservice.client.fallback.UserClientFallback;
+import com.bffservice.client.fallback.UserClientFallbackFactory;
 import com.bffservice.dto.LoginRequestDTO;
 import com.bffservice.dto.RegisterRequestDTO;
 import com.bffservice.dto.UserDTO;
@@ -8,7 +8,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-@FeignClient(name = "USER-SERVICE", fallback = UserClientFallback.class)
+@FeignClient(name = "USER-SERVICE", fallbackFactory = UserClientFallbackFactory.class)
 public interface UserClient {
 
     @GetMapping("/api/users")
@@ -40,4 +40,7 @@ public interface UserClient {
 
     @DeleteMapping("/api/users/{id}")
     void deleteUser(@PathVariable("id") Long id);
+
+    @PutMapping("/api/users/{id}/password")
+    void updatePassword(@PathVariable("id") Long id, @RequestBody String newPassword);
 }
