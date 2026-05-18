@@ -22,10 +22,10 @@ rednorte-parent/
   infrastructure/
     eureka-server/                 → Registro de servicios (puerto 8761)
     config-server/                 → Configuración centralizada (puerto 8888)
-    bff-service/                   → Backend for Frontend / Auth JWT (puerto 8080)
-    api-gateway/                   → Gateway de entrada (puerto 8090)
+    bff-service/                   → Backend for Frontend / Auth JWT (puerto 8090)
+    api-gateway/                   → Gateway de entrada (puerto 8080)
   businessdomain/
-    user-service/                  → Gestión de usuarios (puerto 8081)
+    user-service/                  → Gestión de usuarios (puerto 8084)
     request-service/               → Gestión de solicitudes (puerto 8082)
     waiting-list-service/          → Lista de espera (puerto 8083)
 ```
@@ -156,3 +156,8 @@ mvn test
 cd rednorte-parent/infrastructure/eureka-server
 mvn test
 ```
+---
+ 
+## Diagrama de arquitectura
+
+![Diagrama de arquitectura AWS](./assets/DiagramaFullstack.png)
