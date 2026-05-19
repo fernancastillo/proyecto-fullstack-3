@@ -11,10 +11,10 @@ spring:
   cloud:
     gateway:
       routes:
-        - id: patient-service
-          uri: lb://PATIENT-SERVICE
+        - id: user-service
+          uri: lb://USER-SERVICE
           predicates:
-            - Path=/patients/**
+            - Path=/api/users/**
 
         - id: request-service
           uri: lb://REQUEST-SERVICE
@@ -26,10 +26,10 @@ spring:
           predicates:
             - Path=/waiting-list/**
 
-        - id: user-service
-          uri: lb://USER-SERVICE
+        - id: bff-service
+          uri: lb://BFF-SERVICE
           predicates:
-            - Path=/auth/**
+            - Path=/bff/**
 
 eureka:
   client:
