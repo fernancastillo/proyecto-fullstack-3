@@ -41,3 +41,5 @@ management:
     web:
       exposure:
         include: "*"
+jwt:
+  secret: cmVkbm9ydGUtc2VjcmV0LWtleS1mb3Itand0LWF1dGgtcmVkbm9ydGUtMjAyNg==
