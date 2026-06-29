@@ -32,7 +32,7 @@ public class LogController {
 
     @GetMapping("/microservicio/{nombre}")
     public ResponseEntity<List<LogRequest>> obtenerLogsPorMicroservicio(
-            @PathVariable String nombre) {
+            @PathVariable("nombre") String nombre) {
         return ResponseEntity.ok(logService.obtenerLogsPorMicroservicio(nombre));
     }
 
@@ -43,7 +43,7 @@ public class LogController {
 
     @GetMapping("/estadisticas/{endpoint}")
     public ResponseEntity<Map<String, Object>> obtenerEstadisticas(
-            @PathVariable String endpoint) {
+        @PathVariable("endpoint") String endpoint) {
         Double tiempoPromedio = logService.obtenerTiempoPromedioEndpoint(endpoint);
 
         Map<String, Object> estadisticas = new HashMap<>();
